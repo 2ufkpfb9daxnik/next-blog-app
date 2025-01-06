@@ -1,6 +1,7 @@
 "use client";
 import type { Post } from "@/app/_types/Post";
 import dayjs from "dayjs";
+import Link from "next/link";
 
 type Props = {
   post: Post;
@@ -27,12 +28,14 @@ const PostSummary: React.FC<Props> = (props) => {
           ))}
         </div>
       </div>
-      <div className="font-bold">{post.title}</div>
-      {/* <div>{post.content}</div> */}
-      <div
-        className="line-clamp-3"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+      <Link href={`/posts/${post.id}`}>
+        <div className="font-bold">{post.title}</div>
+        {/* <div>{post.content}</div> */}
+        <div
+          className="line-clamp-3"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
+      </Link>
     </div>
   );
 };
