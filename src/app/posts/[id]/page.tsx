@@ -7,34 +7,47 @@ import Image from "next/image";
 import dayjs from "dayjs";
 import DOMPurify from "isomorphic-dompurify";
 import type { Post } from "@/app/_types/Post";
-import dummyPosts from "@/app/_mocks/dummyPosts";
 
 // 投稿記事の詳細表示 /posts/[id]
 const Page: React.FC = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const formattedDate = (date: string) => dayjs(date).format("YYYY-MM-DD");
 
   // 動的ルートパラメータから 記事id を取得 （URL:/posts/[id]）
   const { id } = useParams() as { id: string };
+  const apiBaseEp = process.env.NEXT_PUBLIC_MICROCMS_BASE_EP!;
+  const apiKey = process.env.NEXT_PUBLIC_MICROCMS_API_KEY!;
 
   // コンポーネントが読み込まれたときに「1回だけ」実行する処理
   useEffect(() => {
-    // 本来はウェブAPIを叩いてデータを取得するが、まずはモックデータを使用
-    // (ネットからのデータ取得をシミュレートして１秒後にデータをセットする)
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      console.log("ウェブAPIからデータを取得しました (虚言)");
-      // dummyPosts から id に一致する投稿を取得してセット
-      const foundPost = dummyPosts.find((p) => p.id === id);
-      setPost(foundPost || null);
-      setIsLoading(false);
-    }, 1000); // 1000ミリ秒 = 1秒
-
-    // データ取得の途中でページ遷移したときにタイマーを解除する処理
-    return () => clearTimeout(timer);
-  }, [id]);
+    const fetchPosts = async () => {
+      try {
+        const requestUrl = `${apiBaseEp}/posts/${id}`;
+        const response = await fetch(requestUrl, {
+          method: "GET",
+          cache: "no-store",
+          headers: {
+            "X-MICROCMS-API-KEY": apiKey,
+          },
+        });
+        if (!response.ok) {
+          throw new Error("データの取得に失敗しました");
+        }
+        const data = await response.json();
+        setPost(data as Post);
+      } catch (e) {
+        setFetchError(
+          e instanceof Error ? e.message : "予期せぬエラーが発生しました"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPosts();
+  }, [apiBaseEp, apiKey, id]);
 
   if (isLoading) {
     return (
@@ -54,10 +67,18 @@ const Page: React.FC = () => {
     ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "br"],
   });
 
+  // タイトルのサニタイズ
+  const safeTitle = DOMPurify.sanitize(post.title, {
+    ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "br"],
+  });
+
   return (
     <main>
       <div className="space-y-2">
-        <div className="mb-2 text-2xl font-bold">{post.title}</div>
+        <div
+          className="mb-2 text-2xl font-bold"
+          dangerouslySetInnerHTML={{ __html: safeTitle }}
+        ></div>
         <div className="flex justify-between">
           <div className="text-sm text-gray-500">
             {formattedDate(post.createdAt)}
@@ -73,15 +94,18 @@ const Page: React.FC = () => {
             ))}
           </div>
         </div>
-        <div>
-          <Image
-            src={post.coverImage.url}
-            alt="Example Image"
-            width={post.coverImage.width}
-            height={post.coverImage.height}
-          />
-        </div>
+        {post.coverImage && (
+          <div>
+            <Image
+              src={post.coverImage.url}
+              alt="Example Image"
+              width={post.coverImage.width}
+              height={post.coverImage.height}
+            />
+          </div>
+        )}
         <div dangerouslySetInnerHTML={{ __html: safeHTML }} />
+        {/* <div>{post.content}</div> */}
       </div>
     </main>
   );
