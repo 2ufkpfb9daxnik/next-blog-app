@@ -6,7 +6,7 @@ import { Category } from "@prisma/client";
 export const GET = async (req: NextRequest) => {
   try {
     console.log("テスト");
-    const categories = await prisma.category.findMany({
+    const categories: Category[] = await prisma.category.findMany({
       // select: {
       //   id: true,
       //   name: true,
