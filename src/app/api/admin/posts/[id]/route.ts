@@ -41,7 +41,7 @@ export const GET = async (
     console.error(error);
     return NextResponse.json(
       { error: "記事の取得に失敗しました" },
-      { status: 404 }
+      { status: 500 }
     );
   }
 };

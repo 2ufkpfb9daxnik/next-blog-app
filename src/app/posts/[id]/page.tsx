@@ -18,36 +18,46 @@ const Page: React.FC = () => {
 
   // 動的ルートパラメータから 記事id を取得 （URL:/posts/[id]）
   const { id } = useParams() as { id: string };
-  const apiBaseEp = process.env.NEXT_PUBLIC_MICROCMS_BASE_EP!;
-  const apiKey = process.env.NEXT_PUBLIC_MICROCMS_API_KEY!;
+  // const apiBaseEp = process.env.NEXT_PUBLIC_MICROCMS_BASE_EP!;
+  // const apiKey = process.env.NEXT_PUBLIC_MICROCMS_API_KEY!;
 
   // コンポーネントが読み込まれたときに「1回だけ」実行する処理
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const requestUrl = `${apiBaseEp}/posts/${id}`;
-        const response = await fetch(requestUrl, {
-          method: "GET",
-          cache: "no-store",
-          headers: {
-            "X-MICROCMS-API-KEY": apiKey,
-          },
-        });
-        if (!response.ok) {
-          throw new Error("データの取得に失敗しました");
+  useEffect(
+    () => {
+      const fetchPosts = async () => {
+        try {
+          // microCMS から記事データを取得
+          // const requestUrl = `${apiBaseEp}/posts/${id}`;
+          // const response = await fetch(requestUrl, {
+          //   method: "GET",
+          //   cache: "no-store",
+          //   headers: {
+          //     "X-MICROCMS-API-KEY": apiKey,
+          //   },
+          // });
+          const response = await fetch(`/api/posts/${id}`);
+          if (!response.ok) {
+            throw new Error("データの取得に失敗しました");
+          }
+          const data = await response.json();
+          setPost(data as Post);
+        } catch (e) {
+          setFetchError(
+            e instanceof Error ? e.message : "予期せぬエラーが発生しました"
+          );
+        } finally {
+          setIsLoading(false);
         }
-        const data = await response.json();
-        setPost(data as Post);
-      } catch (e) {
-        setFetchError(
-          e instanceof Error ? e.message : "予期せぬエラーが発生しました"
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchPosts();
-  }, [apiBaseEp, apiKey, id]);
+      };
+      fetchPosts();
+    },
+    [id]
+    //  [apiBaseEp, apiKey, id]
+  );
+
+  if (fetchError) {
+    return <div>{fetchError}</div>;
+  }
 
   if (isLoading) {
     return (
