@@ -21,7 +21,11 @@ const Header: React.FC = () => {
               ???のブログ
             </Link>
           </div>
-          <div>About</div>
+          <div>
+            <Link href="/about" className="mr-1">
+              About
+            </Link>
+          </div>
         </div>
       </div>
     </header>

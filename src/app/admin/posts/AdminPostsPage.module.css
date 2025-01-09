@@ -1,0 +1,40 @@
+.postList {
+  list-style: none;
+  padding: 0;
+}
+
+.postItem {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.postTitle {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+}
+
+.editButton {
+  background-color: green;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+.deleteButton {
+  background-color: red;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+}
