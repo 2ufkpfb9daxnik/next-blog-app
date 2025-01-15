@@ -25,7 +25,7 @@ const Header: React.FC = () => {
             <Link href="/about" className="mr-1">
               About
             </Link>
-            <Link href="/login">Login</Link>
+            <Link href="/login">Logout</Link>
           </div>
         </div>
       </div>
