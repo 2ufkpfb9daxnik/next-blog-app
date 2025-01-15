@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { NextResponse, NextRequest } from "next/server";
 import { Post } from "@prisma/client";
 import { error } from "console";
-
+import { useParams } from "next/navigation";
 //単一記事の取得
 export const GET = async (
   req: NextRequest,
@@ -38,7 +38,7 @@ export const GET = async (
 
     return NextResponse.json(post, { status: 200 });
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching post:", error);
     return NextResponse.json(
       { error: "記事の取得に失敗しました" },
       { status: 500 }

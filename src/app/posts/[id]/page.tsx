@@ -25,6 +25,7 @@ const Page: React.FC = () => {
   useEffect(
     () => {
       const fetchPosts = async () => {
+        setIsLoading(true);
         try {
           // microCMS から記事データを取得
           // const requestUrl = `${apiBaseEp}/posts/${id}`;
@@ -35,8 +36,14 @@ const Page: React.FC = () => {
           //     "X-MICROCMS-API-KEY": apiKey,
           //   },
           // });
-          const response = await fetch(`/api/posts/${id}`);
+          console.log("id:", id);
+          const response = await fetch(`/api/posts/${id}`, {
+            method: "GET",
+            cache: "no-store",
+          });
+          console.log("API response:", response);
           if (!response.ok) {
+            console.error("API request failed with status:", response.status);
             throw new Error("データの取得に失敗しました");
           }
           const data = await response.json();
