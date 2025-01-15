@@ -21,10 +21,11 @@ const Header: React.FC = () => {
               ???のブログ
             </Link>
           </div>
-          <div>
+          <div className="flex gap-x-6">
             <Link href="/about" className="mr-1">
               About
             </Link>
+            <Link href="/login">Login</Link>
           </div>
         </div>
       </div>

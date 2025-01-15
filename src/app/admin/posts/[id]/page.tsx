@@ -120,7 +120,7 @@ const AdminPostEditPage = ({ params: { id } }) => {
         </label>
         <input
           type="text"
-          value={categoryIds.join(", ")}
+          value={categoryIds?.join(", ") || ""}
           onChange={(e) =>
             setCategoryIds(e.target.value.split(",").map((id) => id.trim()))
           }
