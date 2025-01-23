@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Category } from "../../../_types/Category";
 
 const Page = () => {
   const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [fetchError, setFetchError] = useState(null);
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [post, setPost] = useState({
     title: "",
@@ -78,11 +79,11 @@ const Page = () => {
     }
   };
 
-  const handleCategoryChange = (categoryName) => {
+  const handleCategoryChange = (category: Category) => {
     setSelectedCategories((prev) =>
-      prev.includes(categoryName)
-        ? prev.filter((name) => name !== categoryName)
-        : [...prev, categoryName]
+      prev.includes(category)
+        ? prev.filter((name) => name !== category)
+        : [...prev, category]
     );
   };
 
@@ -150,12 +151,12 @@ const Page = () => {
         </div>
         <div>
           <h2 className="text-lg font-medium text-gray-700">カテゴリ</h2>
-          {categories.map((category) => (
+          {categories.map((category: Category) => (
             <div key={category.id} className="mt-2 flex items-center">
               <input
                 type="checkbox"
-                checked={selectedCategories.includes(category.name)}
-                onChange={() => handleCategoryChange(category.name)}
+                checked={selectedCategories.includes(category)}
+                onChange={() => handleCategoryChange(category)}
                 className="size-4 rounded border-gray-300 text-indigo-600"
               />
               <label className="ml-2 text-sm text-gray-700">
