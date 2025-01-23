@@ -83,6 +83,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { id } = params;
   try {
     const post = await prisma.post.delete({ where: { id } });
     return NextResponse.json({ msg: `「${post.title}」を削除しました。` });
@@ -94,46 +95,39 @@ export async function DELETE(
     );
   }
 }
-
 export async function PUT(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  const { id } = params; // ここでidを取得
+
+  // リクエストボディからデータを取得
+  const { title, content, coverImageUrl, categoryIds } = await req.json();
+
+  if (!title || !content || !coverImageUrl || !categoryIds) {
+    return NextResponse.json(
+      { error: "すべてのフィールドを入力してください" },
+      { status: 400 }
+    );
+  }
+
   try {
-    const { title, content, coverImageUrl, categoryIds } = await req.json();
-
-    //カテゴリIDの検証
-    const validCategories = await prisma.category.findMany({
-      where: {
-        id: {
-          in: categoryIds,
-        },
-      },
-    });
-
-    if (validCategories.length !== categoryIds.length) {
-      return NextResponse.json(
-        { error: " 無効なカテゴリIDが含まれています" },
-        { status: 400 }
-      );
-    }
-
-    //トランザクションを使用してデータの整合性を保つ
+    // トランザクションを使用してデータの整合性を保つ
     const updatedPost = await prisma.$transaction(async (prisma) => {
-      //中間テーブルから現在の紐づけ情報を削除
+      // 中間テーブルから現在の紐づけ情報を削除
       await prisma.postCategory.deleteMany({
         where: { postId: id },
       });
 
-      //投稿記事の内容を更新
+      // 投稿記事の内容を更新
       const post = await prisma.post.update({
         where: { id },
         data: { title, content, coverImageURL: coverImageUrl },
       });
 
-      //中間テーブルに新しい紐づけ情報を追加
+      // 中間テーブルに新しい紐づけ情報を追加
       await prisma.postCategory.createMany({
-        data: categoryIds.map((categoryId) => ({
+        data: categoryIds.map((categoryId: string) => ({
           postId: id,
           categoryId,
         })),
@@ -142,11 +136,11 @@ export async function PUT(
       return post;
     });
 
-    return NextResponse.json(updatedPost, { status: 200 });
+    return NextResponse.json(updatedPost);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: "カテゴリの名前変更に失敗しました" },
+      { error: "投稿記事の更新に失敗しました" },
       { status: 500 }
     );
   }
