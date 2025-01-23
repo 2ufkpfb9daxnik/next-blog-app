@@ -22,6 +22,8 @@ model Post {
   coverImageURL  String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  categoryId     String? // ここにcategoryIdを追加
+  category       Category? @relation(fields: [categoryId], references: [id])
   categories     PostCategory[]
 }
 
@@ -31,16 +33,17 @@ model Category {
   name       String @unique
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-  posts      PostCategory[]
+  posts      Post[]
+  postCategories PostCategory[] // ここにPostCategoryとのリレーションを追加
 }
 
-// 投稿記事とカテゴリを紐づける中間テーブル
+// 投稿カテゴリテーブル
 model PostCategory {
-  id          String @id @default(uuid())
-  postId      String
-  categoryId  String
+  id          String   @id @default(uuid())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  categoryId  String
+  postId      String
   category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }

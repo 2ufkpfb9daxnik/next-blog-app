@@ -88,7 +88,8 @@ const AdminPostsPage = () => {
   const filteredPosts = posts.filter(
     (post) =>
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      (selectedCategories.size === 0 || selectedCategories.has(post.categoryId))
+      (selectedCategories.size === 0 ||
+        (post.categoryId !== null && selectedCategories.has(post.categoryId)))
   );
 
   const indexOfLastPost = currentPage * postsPerPage;
