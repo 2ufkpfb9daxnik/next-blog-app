@@ -3,6 +3,8 @@ import { NextResponse, NextRequest } from "next/server";
 import { Post } from "@prisma/client";
 import { error } from "console";
 import { useParams } from "next/navigation";
+import { supabase } from "@/utils/supabase";
+
 //単一記事の取得
 export const GET = async (
   req: NextRequest,
@@ -51,8 +53,19 @@ export const DELETE = async (
   req: NextRequest,
   { params: { id } }: { params: { id: string } }
 ) => {
+  const token = req.headers.get("Authorization") ?? "";
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 401 });
+
   try {
     const post: Post = await prisma.post.delete({ where: { id } });
+    if (!post) {
+      return NextResponse.json(
+        { error: "削除する投稿記事が見つかりません" },
+        { status: 404 }
+      );
+    }
     return NextResponse.json({ msg: `「${post.title}」を削除しました。` });
   } catch (error) {
     console.error(error);
@@ -75,6 +88,11 @@ export const PUT = async (
   req: NextRequest,
   { params: { id } }: { params: { id: string } }
 ) => {
+  const token = req.headers.get("Authorization") ?? "";
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error)
+    return NextResponse.json({ error: error.message }, { status: 401 });
+
   try {
     const { title, content, coverImageUrl, categoryIds }: RequestBody =
       await req.json();

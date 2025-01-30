@@ -3,8 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Category } from "../../../_types/Category";
+import { useAuth } from "@/app/_hooks/useAuth";
 
 const Page = () => {
+  const { token } = useAuth();
+
   const [categories, setCategories] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState<Category[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -40,11 +43,16 @@ const Page = () => {
   }, []);
 
   const handleUpdate = async () => {
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
     try {
       const response = await fetch(`/api/posts/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify({
           title: post.title,
@@ -65,9 +73,14 @@ const Page = () => {
   };
 
   const handleDelete = async () => {
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
     try {
       const response = await fetch(`/api/posts/${id}`, {
         method: "DELETE",
+        headers: { Authorization: token },
       });
       if (!response.ok) {
         throw new Error("削除に失敗しました");

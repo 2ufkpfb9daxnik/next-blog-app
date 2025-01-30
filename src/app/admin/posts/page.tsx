@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Post, Category } from "@prisma/client";
+import { useAuth } from "@/app/_hooks/useAuth";
 
 const AdminPostsPage = () => {
+  const { token } = useAuth();
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -72,14 +75,19 @@ const AdminPostsPage = () => {
 
   const deletePost = async (id: string) => {
     try {
+      if (!token) {
+        window.alert("予期せぬ動作：トークンが取得できません。");
+        return;
+      }
       const response = await fetch(`/api/posts/${id}`, {
         method: "DELETE",
+        headers: { Authorization: token },
       });
       if (!response.ok) {
         throw new Error("削除に失敗しました");
       }
       setPosts(posts.filter((post) => post.id !== id));
-      alert("削除が成功しました");
+      alert("削除に成功しました");
     } catch (e) {
       alert(e instanceof Error ? e.message : "予期せぬエラーが発生しました");
     }
