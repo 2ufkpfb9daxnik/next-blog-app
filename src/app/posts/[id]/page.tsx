@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -7,123 +8,119 @@ import Image from "next/image";
 import dayjs from "dayjs";
 import DOMPurify from "isomorphic-dompurify";
 import type { Post } from "@/app/_types/Post";
+import { supabase } from "@/utils/supabase";
 
-// 投稿記事の詳細表示 /posts/[id]
 const Page: React.FC = () => {
   const [post, setPost] = useState<Post | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
 
-  const formattedDate = (date: string) => dayjs(date).format("YYYY-MM-DD");
-
-  // 動的ルートパラメータから 記事id を取得 （URL:/posts/[id]）
   const { id } = useParams() as { id: string };
-  // const apiBaseEp = process.env.NEXT_PUBLIC_MICROCMS_BASE_EP!;
-  // const apiKey = process.env.NEXT_PUBLIC_MICROCMS_API_KEY!;
 
-  // コンポーネントが読み込まれたときに「1回だけ」実行する処理
-  useEffect(
-    () => {
-      const fetchPosts = async () => {
-        setIsLoading(true);
-        try {
-          // microCMS から記事データを取得
-          // const requestUrl = `${apiBaseEp}/posts/${id}`;
-          // const response = await fetch(requestUrl, {
-          //   method: "GET",
-          //   cache: "no-store",
-          //   headers: {
-          //     "X-MICROCMS-API-KEY": apiKey,
-          //   },
-          // });
-          console.log("id:", id);
-          const response = await fetch(`/api/posts/${id}`, {
-            method: "GET",
-            cache: "no-store",
-          });
-          console.log("API response:", response);
-          if (!response.ok) {
-            console.error("API request failed with status:", response.status);
-            throw new Error("データの取得に失敗しました");
-          }
-          const data = await response.json();
-          setPost(data as Post);
-        } catch (e) {
-          setFetchError(
-            e instanceof Error ? e.message : "予期せぬエラーが発生しました"
-          );
-        } finally {
-          setIsLoading(false);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // 投稿データの取得
+        const response = await fetch(`/api/posts/${id}`, {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("投稿の取得に失敗しました");
         }
-      };
-      fetchPosts();
-    },
-    [id]
-    //  [apiBaseEp, apiKey, id]
-  );
 
-  if (fetchError) {
-    return <div>{fetchError}</div>;
-  }
+        const data = (await response.json()) as Post;
+        setPost(data);
+
+        // coverImageKey を使用するように修正
+        // if (data.coverImageKey) {
+        //   const { data: urlData } = supabase.storage
+        //     .from("cover_image")
+        //     .getPublicUrl(data.coverImageKey);
+        //   setImageUrl(urlData.publicUrl);
+        // }
+      } catch (e) {
+        setFetchError(
+          e instanceof Error ? e.message : "予期せぬエラーが発生しました"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [id]);
 
   if (isLoading) {
     return (
-      <div className="text-gray-500">
-        <FontAwesomeIcon icon={faSpinner} className="mr-1 animate-spin" />
-        Loading...
+      <div className="flex items-center text-gray-500">
+        <FontAwesomeIcon icon={faSpinner} className="mr-2 animate-spin" />
+        <span>読み込み中...</span>
       </div>
     );
   }
 
-  if (!post) {
-    return <div>指定idの投稿の取得に失敗しました。</div>;
+  if (fetchError) {
+    return <div className="text-red-500">{fetchError}</div>;
   }
 
-  // HTMLコンテンツのサニタイズ
+  if (!post) {
+    return <div>投稿が見つかりません。</div>;
+  }
+
   const safeHTML = DOMPurify.sanitize(post.content, {
     ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "br"],
   });
 
-  // タイトルのサニタイズ
   const safeTitle = DOMPurify.sanitize(post.title, {
     ALLOWED_TAGS: ["b", "strong", "i", "em", "u", "br"],
   });
 
   return (
-    <main>
-      <div className="space-y-2">
-        <div
-          className="mb-2 text-2xl font-bold"
-          dangerouslySetInnerHTML={{ __html: safeTitle }}
-        ></div>
-        <div className="flex justify-between">
-          <div className="text-sm text-gray-500">
-            {formattedDate(post.createdAt)}
+    <main className="mx-auto max-w-4xl p-4">
+      <article className="space-y-4">
+        <header className="space-y-2">
+          <h1
+            className="text-3xl font-bold"
+            dangerouslySetInnerHTML={{ __html: safeTitle }}
+          />
+          <div className="flex items-center justify-between">
+            <time className="text-sm text-gray-500">
+              {dayjs(post.createdAt).format("YYYY-MM-DD")}
+            </time>
+            <div className="flex gap-2">
+              {post.categories.map((category) => (
+                <span
+                  key={category.id}
+                  className="rounded-md border px-2 py-1 text-sm text-gray-500"
+                >
+                  {category.name}
+                </span>
+              ))}
+            </div>
           </div>
-          <div className="flex space-x-2">
-            {post.categories.map((category) => (
-              <div
-                key={category.id}
-                className="rounded-md border px-2 text-sm text-gray-500"
-              >
-                {category.name}
-              </div>
-            ))}
-          </div>
-        </div>
-        {post.coverImage && (
-          <div>
+        </header>
+
+        {imageUrl && (
+          <div className="aspect-w-16 aspect-h-9 relative overflow-hidden rounded-lg">
             <Image
-              src={post.coverImage.url}
-              alt="Example Image"
-              width={post.coverImage.width}
-              height={post.coverImage.height}
+              src={imageUrl}
+              alt={`${post.title}のカバー画像`}
+              fill
+              className="object-cover"
+              priority
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           </div>
         )}
-        <div dangerouslySetInnerHTML={{ __html: safeHTML }} />
-        {/* <div>{post.content}</div> */}
-      </div>
+
+        <div
+          className="prose prose-lg max-w-none"
+          dangerouslySetInnerHTML={{ __html: safeHTML }}
+        />
+      </article>
     </main>
   );
 };

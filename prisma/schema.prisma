@@ -19,10 +19,10 @@ model Post {
   id             String @id @default(uuid())
   title          String
   content        String
-  coverImageURL  String
+  coverImageKey  String   // coverImageURL から coverImageKey に変更
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
-  categoryId     String? // ここにcategoryIdを追加
+  categoryId     String?
   category       Category? @relation(fields: [categoryId], references: [id])
   categories     PostCategory[]
 }

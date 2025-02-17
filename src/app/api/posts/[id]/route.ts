@@ -34,34 +34,19 @@ type RouteParams = {
 
 export const GET = async (req: NextRequest, routeParams: RouteParams) => {
   try {
-    // パラメータプレースホルダから id を取得
     const id = routeParams.params.id;
 
-    // findUnique は id に一致する「1件」のレコードを取得するメソッド
-    // もし条件に一致するレコードが存在しないときは null が戻り値となる
     const post = await prisma.post.findUnique({
       where: { id },
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        coverImageURL: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
         categories: {
-          select: {
-            category: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
+          include: {
+            category: true,
           },
         },
       },
     });
 
-    // 投稿記事が存在しないときの ( post が null のときの) 処理
     if (!post) {
       return NextResponse.json(
         { error: `id='${id}'の投稿記事は見つかりませんでした` },
@@ -69,7 +54,18 @@ export const GET = async (req: NextRequest, routeParams: RouteParams) => {
       );
     }
 
-    return NextResponse.json(post);
+    // PostCategoryのデータを整形してカテゴリー情報を返す
+    const formattedPost = {
+      id: post.id,
+      title: post.title,
+      content: post.content,
+      coverImageKey: post.coverImageKey,
+      createdAt: post.createdAt,
+      updatedAt: post.updatedAt,
+      categories: post.categories.map((pc) => pc.category),
+    };
+
+    return NextResponse.json(formattedPost);
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -102,9 +98,9 @@ export async function PUT(
   const { id } = params; // ここでidを取得
 
   // リクエストボディからデータを取得
-  const { title, content, coverImageUrl, categoryIds } = await req.json();
+  const { title, content, coverImageKey, categoryIds } = await req.json();
 
-  if (!title || !content || !coverImageUrl || !categoryIds) {
+  if (!title || !content || !coverImageKey || !categoryIds) {
     return NextResponse.json(
       { error: "すべてのフィールドを入力してください" },
       { status: 400 }
@@ -122,7 +118,7 @@ export async function PUT(
       // 投稿記事の内容を更新
       const post = await prisma.post.update({
         where: { id },
-        data: { title, content, coverImageURL: coverImageUrl },
+        data: { title, content, coverImageKey: coverImageKey },
       });
 
       // 中間テーブルに新しい紐づけ情報を追加

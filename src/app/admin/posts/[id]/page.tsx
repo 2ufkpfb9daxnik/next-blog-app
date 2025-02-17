@@ -15,7 +15,7 @@ const Page = () => {
   const [post, setPost] = useState({
     title: "",
     content: "",
-    coverImageUrl: "",
+    coverImageKey: "",
   });
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,7 +57,7 @@ const Page = () => {
         body: JSON.stringify({
           title: post.title,
           content: post.content,
-          coverImageUrl: post.coverImageUrl,
+          coverImageKey: post.coverImageKey,
           categories: selectedCategories,
         }),
       });
@@ -155,9 +155,9 @@ const Page = () => {
           </label>
           <input
             type="text"
-            value={post.coverImageUrl}
+            value={post.coverImageKey}
             onChange={(e) =>
-              setPost({ ...post, coverImageUrl: e.target.value })
+              setPost({ ...post, coverImageKey: e.target.value })
             }
             className="mt-1 block w-full rounded-md border border-gray-300 p-2 shadow-sm"
           />

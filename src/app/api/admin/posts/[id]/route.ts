@@ -80,7 +80,7 @@ export const DELETE = async (
 type RequestBody = {
   title: string;
   content: string;
-  coverImageUrl: string;
+  coverImageKey: string;
   categoryIds: string[];
 };
 
@@ -94,7 +94,7 @@ export const PUT = async (
     return NextResponse.json({ error: error.message }, { status: 401 });
 
   try {
-    const { title, content, coverImageUrl, categoryIds }: RequestBody =
+    const { title, content, coverImageKey, categoryIds }: RequestBody =
       await req.json();
 
     //カテゴリIDの検証
@@ -123,7 +123,7 @@ export const PUT = async (
       //投稿記事の内容を更新
       const post = await prisma.post.update({
         where: { id },
-        data: { title, content, coverImageURL: coverImageUrl },
+        data: { title, content, coverImageKey: coverImageKey },
       });
 
       //中間テーブルに新しい紐づけ情報を追加

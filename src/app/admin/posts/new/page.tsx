@@ -31,7 +31,7 @@ const Page: React.FC = () => {
 
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
-  const [newCoverImageURL, setNewCoverImageURL] = useState("");
+  const [newcoverImageKey, setNewcoverImageKey] = useState("");
 
   const router = useRouter();
 
@@ -116,9 +116,9 @@ const Page: React.FC = () => {
     setNewContent(e.target.value);
   };
 
-  const updateNewCoverImageURL = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const updateNewcoverImageKey = (e: React.ChangeEvent<HTMLInputElement>) => {
     // ここにカバーイメージURLのバリデーション処理を追加する
-    setNewCoverImageURL(e.target.value);
+    setNewcoverImageKey(e.target.value);
   };
 
   // フォームの送信処理
@@ -137,7 +137,7 @@ const Page: React.FC = () => {
       const requestBody = {
         title: newTitle,
         content: newContent,
-        coverImageURL: newCoverImageURL,
+        coverImageKey: newcoverImageKey,
         categoryIds: checkableCategories
           ? checkableCategories.filter((c) => c.isSelect).map((c) => c.id)
           : [],
@@ -237,16 +237,16 @@ const Page: React.FC = () => {
         </div>
 
         <div className="space-y-1">
-          <label htmlFor="coverImageURL" className="block font-bold">
+          <label htmlFor="coverImageKey" className="block font-bold">
             カバーイメージ (URL)
           </label>
           <input
             type="url"
-            id="coverImageURL"
-            name="coverImageURL"
+            id="coverImageKey"
+            name="coverImageKey"
             className="w-full rounded-md border-2 px-2 py-1"
-            value={newCoverImageURL}
-            onChange={updateNewCoverImageURL}
+            value={newcoverImageKey}
+            onChange={updateNewcoverImageKey}
             placeholder="カバーイメージのURLを記入してください"
             required
           />
