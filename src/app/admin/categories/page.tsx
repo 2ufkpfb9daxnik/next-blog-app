@@ -2,8 +2,12 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Category } from "@prisma/client";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/_hooks/useAuth";
 
 const AdminCategoriesPage = () => {
+  const { token } = useAuth();
+  const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -12,9 +16,19 @@ const AdminCategoriesPage = () => {
   const itemsPerPage = 20;
 
   useEffect(() => {
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
+
     const fetchCategories = async () => {
       try {
-        const response = await fetch("/api/categories");
+        const response = await fetch("/api/categories", {
+          method: "GET",
+          headers: {
+            Authorization: token,
+          },
+        });
         if (!response.ok) {
           throw new Error("カテゴリの取得に失敗しました");
         }
@@ -30,12 +44,19 @@ const AdminCategoriesPage = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [token, router]);
 
   const handleDelete = async (id: string) => {
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
     try {
       const response = await fetch(`/api/categories/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: token,
+        },
       });
       if (!response.ok) {
         throw new Error("削除に失敗しました");

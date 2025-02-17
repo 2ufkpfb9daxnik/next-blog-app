@@ -1,4 +1,5 @@
 "use client";
+import { useAuth } from "@/app/_hooks/useAuth";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -18,6 +19,7 @@ type CategoryApiResponse = {
 
 // カテゴリの編集・削除のページ
 const Page: React.FC = () => {
+  const { token } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fetchErrorMsg, setFetchErrorMsg] = useState<string | null>(null);
@@ -38,9 +40,22 @@ const Page: React.FC = () => {
   // カテゴリ配列 (State)。取得中と取得失敗時は null、既存カテゴリが0個なら []
   const [categories, setCategories] = useState<Category[] | null>(null);
 
+  // ページロード時の認証チェックを追加
+  useEffect(() => {
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
+  }, [token, router]);
+
   // ウェブAPI (/api/categories) からカテゴリの一覧をフェッチする関数の定義
   const fetchCategories = async () => {
     try {
+      if (!token) {
+        window.alert("予期せぬ動作：トークンが取得できません。");
+        return;
+      }
+
       setIsLoading(true);
 
       // フェッチ処理の本体
@@ -48,6 +63,9 @@ const Page: React.FC = () => {
       const res = await fetch(requestUrl, {
         method: "GET",
         cache: "no-store",
+        headers: {
+          Authorization: token, // 認証ヘッダーを追加
+        },
       });
 
       // レスポンスのステータスコードが200以外の場合 (カテゴリのフェッチに失敗した場合)
@@ -81,8 +99,12 @@ const Page: React.FC = () => {
 
   // コンポーネントがマウントされたとき (初回レンダリングのとき) に1回だけ実行
   useEffect(() => {
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
     fetchCategories();
-  }, []);
+  }, [token, router]);
 
   // categories または id が変更されたときにコールされる関数
   useEffect(() => {
@@ -113,6 +135,12 @@ const Page: React.FC = () => {
   // 「カテゴリの名前を変更」のボタンが押下されたときにコールされる関数
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // これを実行しないと意図せずページがリロードされるので注意
+
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -122,6 +150,7 @@ const Page: React.FC = () => {
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify({ name: newCategoryName }),
       });
@@ -146,6 +175,10 @@ const Page: React.FC = () => {
 
   // 「削除」のボタンが押下されたときにコールされる関数
   const handleDelete = async () => {
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
     // prettier-ignore
     if (!window.confirm(`カテゴリ「${currentCategoryName}」を本当に削除しますか？`)) {
       return;
@@ -157,6 +190,11 @@ const Page: React.FC = () => {
       const res = await fetch(requestUrl, {
         method: "DELETE",
         cache: "no-store",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token,
+        },
+        body: JSON.stringify({ name: newCategoryName }),
       });
 
       if (!res.ok) {

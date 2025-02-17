@@ -1,4 +1,6 @@
 "use client";
+import { useAuth } from "@/app/_hooks/useAuth";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
@@ -17,6 +19,8 @@ type CategoryApiResponse = {
 
 // カテゴリの新規作成 (追加) のページ
 const Page: React.FC = () => {
+  const { token } = useAuth();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fetchErrorMsg, setFetchErrorMsg] = useState<string | null>(null);
@@ -28,6 +32,11 @@ const Page: React.FC = () => {
 
   // ウェブAPI (/api/categories) からカテゴリの一覧をフェッチする関数の定義
   const fetchCategories = async () => {
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
+
     try {
       setIsLoading(true);
 
@@ -36,6 +45,9 @@ const Page: React.FC = () => {
       const res = await fetch(requestUrl, {
         method: "GET",
         cache: "no-store",
+        headers: {
+          Authorization: token,
+        },
       });
 
       // レスポンスのステータスコードが200以外の場合 (カテゴリのフェッチに失敗した場合)
@@ -67,8 +79,12 @@ const Page: React.FC = () => {
 
   // コンポーネントがマウントされたとき (初回レンダリングのとき) に1回だけ実行
   useEffect(() => {
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      return;
+    }
     fetchCategories();
-  }, []);
+  }, [token, router]);
 
   // カテゴリの名前のバリデーション
   const isValidCategoryName = (name: string): string => {
@@ -90,6 +106,13 @@ const Page: React.FC = () => {
   // フォームのボタン (type="submit") がクリックされたときにコールされる関数
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault(); // これを実行しないと意図せずページがリロードされるので注意
+
+    if (!token) {
+      window.alert("予期せぬ動作：トークンが取得できません。");
+      setIsSubmitting(false);
+      return;
+    }
+
     setIsSubmitting(true);
 
     // ▼▼ 追加 ウェブAPI (/api/admin/categories) にPOSTリクエストを送信する処理
@@ -100,6 +123,7 @@ const Page: React.FC = () => {
         cache: "no-store",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token,
         },
         body: JSON.stringify({ name: newCategoryName }),
       });

@@ -42,6 +42,10 @@ const Page: React.FC = () => {
 
   // コンポーネントがマウントされたとき (初回レンダリングのとき) に1回だけ実行
   useEffect(() => {
+    if (!token) {
+      router.push("/login");
+      return;
+    }
     // ウェブAPI (/api/categories) からカテゴリの一覧をフェッチする関数の定義
     const fetchCategories = async () => {
       try {
@@ -52,6 +56,10 @@ const Page: React.FC = () => {
         const res = await fetch(requestUrl, {
           method: "GET",
           cache: "no-store",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token, // 認証ヘッダーを追加
+          },
         });
 
         // レスポンスのステータスコードが200以外の場合 (カテゴリのフェッチに失敗した場合)
